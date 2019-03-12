@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t michelleful/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run michelleful/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t michelleful/multi-client ./client
+  - docker build -t michelleful/multi-nginx ./nginx
+  - docker build -t michelleful/multi-server ./server
+  - docker build -t michelleful/multi-worker ./worker
+  # log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take images above and push to docker hub
+  - docker push michelleful/multi-client
+  - docker push michelleful/multi-nginx
+  - docker push michelleful/multi-server
+  - docker push michelleful/multi-worker
